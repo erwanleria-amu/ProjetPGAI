@@ -40,6 +40,9 @@ public:
     ~MainWindow();
 
     void displayMesh(MyMesh *_mesh, bool isTemperatureMap = false, float mapRange = -1);
+
+    void boiteEnglobante(MyMesh *_mesh);
+
     void resetAllColorsAndThickness(MyMesh* _mesh);
 
 private slots:

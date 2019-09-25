@@ -21,6 +21,7 @@ void MainWindow::on_pushButton_chargement_clicked()
 
     // on affiche le maillage
     displayMesh(&mesh);
+    boiteEnglobante(&mesh);
 }
 
 // exemple pour construire un mesh face par face
@@ -125,10 +126,54 @@ void MainWindow::resetAllColorsAndThickness(MyMesh* _mesh)
     EdgeHandle vh = _mesh->edge_handle(2);
      _mesh->set_color(vh,MyMesh::Color(0, 0, 100));
      _mesh->data(vh).thickness = 120;
-  qDebug("nb faces : %d", _mesh->n_faces()); // nombre de faces
-  qDebug("nb sommets : %d", _mesh->n_vertices()); // nombre de sommets
+     qDebug("nb faces : %d", _mesh->n_faces()); // nombre de faces
+     qDebug("nb sommets : %d", _mesh->n_vertices()); // nombre de sommets
+     //faces sans voisins
+
+#if 0
+     for (MyMesh::FaceIter curFace = _mesh->faces_begin(); curFace != _mesh->faces_end(); curFace++)
+     {
+        if(curFace)
+     }
+#endif
 }
 
+void MainWindow::boiteEnglobante(MyMesh *_mesh) {
+
+    //Initialisation avec le premier vertex
+    float xMin = _mesh->point(VertexHandle(0))[0], xMax = _mesh->point(VertexHandle(0))[0],
+            yMin = _mesh->point(VertexHandle(0))[1], yMax = _mesh->point(VertexHandle(0))[1],
+            zMin = _mesh->point(VertexHandle(0))[2], zMax = _mesh->point(VertexHandle(0))[2];
+
+    for(MyMesh::VertexIter v = _mesh->vertices_begin(); v != _mesh->vertices_end() ; v++) {
+
+        MyMesh::Point p = _mesh->point(*v);
+
+        if(xMin > p[0])
+            xMin = p[0];
+
+        if(xMax < p[0])
+            xMax = p[0];
+
+        if(yMin > p[1])
+            yMin = p[1];
+
+        if(yMax < p[1])
+            yMax = p[1];
+
+        if(zMin < p[2])
+            zMin = p[2];
+
+        if(zMax > p[2])
+            zMax = p[2];
+
+    }
+
+    qDebug("\n\nParametres de la boite englobante \n");
+    qDebug() << "xMin : " << xMin << ", xMax : " << xMax << endl;
+    qDebug() << "yMin : " << yMin << ", yMax : " << yMax << endl;
+    qDebug() << "zMin : " << zMin << ", zMax : " << zMax << endl;
+}
 // charge un objet MyMesh dans l'environnement OpenGL
 void MainWindow::displayMesh(MyMesh* _mesh, bool isTemperatureMap, float mapRange)
 {
