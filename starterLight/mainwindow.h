@@ -43,6 +43,8 @@ public:
 
     void boiteEnglobante(MyMesh *_mesh);
 
+    void barycentre(MyMesh * _mesh);
+
     void resetAllColorsAndThickness(MyMesh* _mesh);
 
 private slots:

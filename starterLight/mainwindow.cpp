@@ -22,6 +22,7 @@ void MainWindow::on_pushButton_chargement_clicked()
     // on affiche le maillage
     displayMesh(&mesh);
     boiteEnglobante(&mesh);
+    barycentre(&mesh);
 }
 
 // exemple pour construire un mesh face par face
@@ -173,7 +174,33 @@ void MainWindow::boiteEnglobante(MyMesh *_mesh) {
     qDebug() << "xMin : " << xMin << ", xMax : " << xMax << endl;
     qDebug() << "yMin : " << yMin << ", yMax : " << yMax << endl;
     qDebug() << "zMin : " << zMin << ", zMax : " << zMax << endl;
+
 }
+
+void MainWindow::barycentre(MyMesh *_mesh) {
+
+    double bary_accX = 0;
+    double bary_accY = 0;
+    double bary_accZ = 0;
+
+    for(MyMesh::VertexIter v = _mesh->vertices_begin(); v != _mesh->vertices_end() ; v++) {
+
+        MyMesh::Point p = _mesh->point(*v);
+
+        bary_accX += p[0];
+        bary_accY += p[1];
+        bary_accZ += p[2];
+    }
+
+    bary_accX = bary_accX/_mesh->n_vertices();
+    bary_accY = bary_accY/_mesh->n_vertices();
+    bary_accZ = bary_accZ/_mesh->n_vertices();
+
+    qDebug("\n\nBarycentre \n");
+    qDebug() << "(X, Y, Z) = " << bary_accX << ", " << bary_accY << ", " << bary_accZ << endl;
+
+}
+
 // charge un objet MyMesh dans l'environnement OpenGL
 void MainWindow::displayMesh(MyMesh* _mesh, bool isTemperatureMap, float mapRange)
 {
