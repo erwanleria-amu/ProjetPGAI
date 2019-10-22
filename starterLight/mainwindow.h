@@ -45,16 +45,19 @@ public:
 
     void barycentre(MyMesh * _mesh);
 
+    double aireBarycentre(MyMesh* _mesh, VertexHandle v);
+
     float angleDiedre(MyMesh* _mesh, int faceID0,  int faceID1);
 
     void histoAngleDiedre(MyMesh* _mesh);
 
     void resetAllColorsAndThickness(MyMesh* _mesh);
 
+    float angleEE(MyMesh* _mesh, int vertexID, int faceID);
+    void K_Curv(MyMesh* _mesh);
+
 private slots:
     void on_pushButton_chargement_clicked();
-
-    void on_pushButton_generer_clicked();
 
 private:
 

@@ -24,79 +24,7 @@ void MainWindow::on_pushButton_chargement_clicked()
     boiteEnglobante(&mesh);
     barycentre(&mesh);
     histoAngleDiedre(&mesh);
-}
-
-// exemple pour construire un mesh face par face
-void MainWindow::on_pushButton_generer_clicked()
-{
-    MyMesh mesh;
-
-    // on construit une liste de sommets
-    MyMesh::VertexHandle sommets[8];
-    sommets[0] = mesh.add_vertex(MyMesh::Point(-1, -1,  1));
-    sommets[1] = mesh.add_vertex(MyMesh::Point( 1, -1,  1));
-    sommets[2] = mesh.add_vertex(MyMesh::Point( 1,  1,  1));
-    sommets[3] = mesh.add_vertex(MyMesh::Point(-1,  1,  1));
-    sommets[4] = mesh.add_vertex(MyMesh::Point(-1, -1, -1));
-    sommets[5] = mesh.add_vertex(MyMesh::Point( 1, -1, -1));
-    sommets[6] = mesh.add_vertex(MyMesh::Point( 1,  1, -1));
-    sommets[7] = mesh.add_vertex(MyMesh::Point(-1,  1, -1));
-
-
-    // on construit des faces à partir des sommets
-
-    std::vector<MyMesh::VertexHandle> uneNouvelleFace;
-
-    uneNouvelleFace.clear();
-    uneNouvelleFace.push_back(sommets[0]);
-    uneNouvelleFace.push_back(sommets[1]);
-    uneNouvelleFace.push_back(sommets[2]);
-    uneNouvelleFace.push_back(sommets[3]);
-    mesh.add_face(uneNouvelleFace);
-
-    uneNouvelleFace.clear();
-    uneNouvelleFace.push_back(sommets[7]);
-    uneNouvelleFace.push_back(sommets[6]);
-    uneNouvelleFace.push_back(sommets[5]);
-    uneNouvelleFace.push_back(sommets[4]);
-    mesh.add_face(uneNouvelleFace);
-
-    uneNouvelleFace.clear();
-    uneNouvelleFace.push_back(sommets[1]);
-    uneNouvelleFace.push_back(sommets[0]);
-    uneNouvelleFace.push_back(sommets[4]);
-    uneNouvelleFace.push_back(sommets[5]);
-    mesh.add_face(uneNouvelleFace);
-
-    uneNouvelleFace.clear();
-    uneNouvelleFace.push_back(sommets[2]);
-    uneNouvelleFace.push_back(sommets[1]);
-    uneNouvelleFace.push_back(sommets[5]);
-    uneNouvelleFace.push_back(sommets[6]);
-    mesh.add_face(uneNouvelleFace);
-
-    uneNouvelleFace.clear();
-    uneNouvelleFace.push_back(sommets[3]);
-    uneNouvelleFace.push_back(sommets[2]);
-    uneNouvelleFace.push_back(sommets[6]);
-    uneNouvelleFace.push_back(sommets[7]);
-    mesh.add_face(uneNouvelleFace);
-
-    uneNouvelleFace.clear();
-    uneNouvelleFace.push_back(sommets[0]);
-    uneNouvelleFace.push_back(sommets[3]);
-    uneNouvelleFace.push_back(sommets[7]);
-    uneNouvelleFace.push_back(sommets[4]);
-    mesh.add_face(uneNouvelleFace);
-
-    mesh.update_normals();
-
-    // initialisation des couleurs et épaisseurs (sommets et arêtes) du mesh
-    resetAllColorsAndThickness(&mesh);
-
-    // on affiche le maillage
-    displayMesh(&mesh);
-
+    K_Curv(&mesh);
 }
 
 /* **** fin de la partie boutons et IHM **** */
@@ -194,9 +122,9 @@ void MainWindow::barycentre(MyMesh *_mesh) {
         bary_accZ += p[2];
     }
 
-    bary_accX = bary_accX/_mesh->n_vertices();
-    bary_accY = bary_accY/_mesh->n_vertices();
-    bary_accZ = bary_accZ/_mesh->n_vertices();
+    bary_accX = int(bary_accX/_mesh->n_vertices());
+    bary_accY = int(bary_accY/_mesh->n_vertices());
+    bary_accZ = int(bary_accZ/_mesh->n_vertices());
 
     qDebug("\n\nBarycentre \n");
     qDebug() << "(X, Y, Z) = " << bary_accX << ", " << bary_accY << ", " << bary_accZ << endl;
@@ -237,6 +165,7 @@ void MainWindow::histoAngleDiedre(MyMesh *_mesh)
         {
             float d = angleDiedre(_mesh, f_it->idx(), ffcw_it->idx());
 
+            int j = int(d/10);
             for(int i = 0; i < (d/10); i++)
             {
                 accAngle[i] += 1;
@@ -248,15 +177,61 @@ void MainWindow::histoAngleDiedre(MyMesh *_mesh)
     qDebug() << "Histogramme d'angles dièdres\n" ;
     for(int angle = 0 ; angle < 36 ; angle++)
     {
-        for(int j = 0 ; j < angle ; j++)
-        {
-            accAngle[angle] += accAngle[j];
-        }
-
-        qDebug() << "Angles inférieurs à " << (angle+1)*10 << " :" << accAngle[angle] << "degres" << endl;
+        qDebug() << "Angles inférieurs à " << (angle+1)*10 << " degrés :" << accAngle[angle] << endl;
     }
 }
 
+
+float MainWindow::angleEE(MyMesh* _mesh, int vertexID,  int faceID)
+{
+    FaceHandle face0(faceID);
+
+    VertexHandle vex0(vertexID);
+
+    QVector<MyMesh::Point> points;
+
+    for(MyMesh::FaceVertexIter fv_it = _mesh->fv_begin(face0) ; fv_it.is_valid() ; fv_it++)
+    {
+        if(_mesh->point(fv_it) != _mesh->point(vex0))
+            points.append(_mesh->point(*fv_it));
+    }
+
+    MyMesh::Point p0 = _mesh->point(vex0);
+
+    MyMesh::Point u = points[0] - p0;
+    MyMesh::Point v = points[1] - p0;
+    v.normalize();
+    u.normalize();
+
+    return acos(u|v);
+}
+
+double MainWindow::aireBarycentre(MyMesh* _mesh, VertexHandle v)
+{
+    double r = 0;
+    for(MyMesh::VertexFaceIter vf_it = _mesh->vf_begin(v) ; vf_it.is_valid() ; vf_it++)
+    {
+        r += (1/3) ;//multiplié par l'aire de chaque face voisine;
+    }
+}
+
+void MainWindow::K_Curv(MyMesh* _mesh)
+{
+    for(MyMesh::VertexIter v_it = _mesh->vertices_begin() ; v_it != _mesh->vertices_end() ; v_it++)
+    {
+         double k = (1/(aireBarycentre(_mesh, v_it)));
+         double c = 2*M_PI;
+         double sum = 0;
+         for(MyMesh::VertexFaceIter vf_it = _mesh->vf_begin(v_it) ; vf_it.is_valid() ; vf_it++)
+         {
+             sum += angleEE(_mesh, v_it->idx(), vf_it->idx());
+         }
+
+         double total = k * (c - sum);
+         _mesh->data(v_it).value = total;
+    }
+    qDebug() << "End of function" << endl;
+}
 
 
 
