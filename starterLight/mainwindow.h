@@ -48,13 +48,22 @@ public:
     double aireBarycentre(MyMesh* _mesh, VertexHandle v);
 
     float angleDiedre(MyMesh* _mesh, int faceID0,  int faceID1);
-
-    void histoAngleDiedre(MyMesh* _mesh);
+    void histoAngleDiedre(MyMesh *_mesh);
 
     void resetAllColorsAndThickness(MyMesh* _mesh);
 
+    void calcul_nb_truc(MyMesh *_mesh);
+
+    MyMesh::Normal calcul_normale_une_face(MyMesh *_mesh, int faceId);
+    void calcul_normale_sommet(MyMesh *_mesh);
+
+    float aire_face(MyMesh* _mesh, unsigned int faceID);
+    void faceObjet(MyMesh* _mesh);
+    void aire_Objet(MyMesh* _mesh);
+
+
     float angleEE(MyMesh* _mesh, int vertexID, int faceID);
-    void K_Curv(MyMesh* _mesh);
+    void K_Curv(MyMesh* _mesh); //TODO H-CURVE
 
 private slots:
     void on_pushButton_chargement_clicked();
