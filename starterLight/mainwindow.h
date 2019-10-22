@@ -45,11 +45,16 @@ public:
 
     void barycentre(MyMesh * _mesh);
 
-    float angleDiedre(MyMesh* _mesh, int faceID0,  int faceID1);
-
-    void histoAngleDiedre(MyMesh* _mesh);
-
     void resetAllColorsAndThickness(MyMesh* _mesh);
+
+    void calcul_nb_truc(MyMesh *_mesh);
+
+    MyMesh::Normal calcul_normale_une_face(MyMesh *_mesh, int faceId);
+    void calcul_normale_sommet(MyMesh *_mesh);
+
+    float aire_face(MyMesh* _mesh, unsigned int faceID);
+    void faceObjet(MyMesh* _mesh);
+
 
 private slots:
     void on_pushButton_chargement_clicked();

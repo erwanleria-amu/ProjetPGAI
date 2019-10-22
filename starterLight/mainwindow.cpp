@@ -21,9 +21,11 @@ void MainWindow::on_pushButton_chargement_clicked()
 
     // on affiche le maillage
     displayMesh(&mesh);
+    calcul_nb_truc(&mesh);
     boiteEnglobante(&mesh);
     barycentre(&mesh);
-    histoAngleDiedre(&mesh);
+    calcul_normale_sommet(&mesh);
+    aire_Objet(&mesh);
 }
 
 // exemple pour construire un mesh face par face
@@ -125,7 +127,7 @@ void MainWindow::resetAllColorsAndThickness(MyMesh* _mesh)
     }
 
     //====================== NOS MODIFS=====================
-    EdgeHandle vh = _mesh->edge_handle(2);
+    /*EdgeHandle vh = _mesh->edge_handle(2);
      _mesh->set_color(vh,MyMesh::Color(0, 0, 100));
      _mesh->data(vh).thickness = 120;
      qDebug("nb faces : %d", _mesh->n_faces()); // nombre de faces
@@ -137,12 +139,93 @@ void MainWindow::resetAllColorsAndThickness(MyMesh* _mesh)
      {
         if(curFace)
      }
-#endif
+#endif*/
+}
+
+void MainWindow:: calcul_nb_truc(MyMesh *_mesh) {
+   qDebug("YOOOOO");
+    qDebug("nb sommets : %d",(int) _mesh->n_vertices()); // nombre de sommets
+   qDebug("nb faces : %d",(int) _mesh->n_faces());
+
+   qDebug("nb aretes : %d",(int) _mesh->n_edges());
+}
+
+// ==== a continuer
+MyMesh::Normal MainWindow:: calcul_normale_une_face(MyMesh *_mesh,
+                                          int faceId){
+
+    MyMesh::Normal  normalFh;
+    FaceHandle fh = _mesh->face_handle(faceId);
+    normalFh=_mesh->normal(fh);
+    return normalFh;
+}
+
+void MainWindow:: calcul_normale_sommet(MyMesh *_mesh){
+    // pour toutes les faces de tous les sommets
+    //=> calculer leurs normales => faire moyenne des normales
+    for (MyMesh::VertexIter curVert = _mesh->vertices_begin(); curVert != _mesh->vertices_end(); curVert++)//tous les sommets
+    {   int nb_faces=0;
+        MyMesh::Normal  normalFh;
+
+        for (MyMesh::VertexFaceIter curFace = _mesh->vf_iter(*curVert); curFace.is_valid(); curFace ++)// ttes les faces
+        {
+            normalFh += calcul_normale_une_face(_mesh,curFace->idx());
+            nb_faces++;
+        }
+
+        qDebug("pour le sommet %d : ",curVert->idx());
+        for(int i=0; i<normalFh.size();i++){
+            qDebug("x: %d\n y: %d\n z: %d\n",normalFh[0],normalFh[1],normalFh[2]);
+        }
+    }
+}
+// ========
+//calcul aire d'une face
+float MainWindow::aire_face(MyMesh* _mesh, unsigned int faceID)
+{
+
+      VertexHandle vertexA;
+      VertexHandle vertexB;
+      VertexHandle vertexC;
+
+      FaceHandle curFace = _mesh->face_handle(faceID); // face actuelle selon parametre
+
+      // recuperer demi-arete de notre face actuelle
+      MyMesh::HalfedgeHandle curHalfEdge = _mesh->halfedge_handle(curFace);
+      //recuperer un sommet
+      vertexA = _mesh->to_vertex_handle(curHalfEdge);
+
+      //demi arete suivante
+      curHalfEdge = _mesh->next_halfedge_handle(curHalfEdge);
+      //sommet suivant
+      vertexB = _mesh->to_vertex_handle(curHalfEdge);
+
+      //demi arete suivante
+      curHalfEdge = _mesh->next_halfedge_handle(curHalfEdge);
+      //sommet suivant
+      vertexC = _mesh->to_vertex_handle(curHalfEdge);
+
+      //faire calcul aire
+      return (((_mesh->point(vertexB)-_mesh->point(vertexA))%(_mesh->point(vertexC)-_mesh->point(vertexA))).norm())/2;
+
+}
+
+void MainWindow::aire_Objet(MyMesh* _mesh){
+    float aireObjet=0;
+    float aireFace=0;
+    for (MyMesh::FaceIter curFace = _mesh->faces_begin(); curFace != _mesh->faces_end(); curFace++)
+    {
+        aireFace=aire_face(_mesh,curFace->idx());
+        qDebug("aireface %f",aireFace);
+        aireObjet+=aireFace;
+        //qDebug("aire de la face %d: %d\n",curFace->idx(),aireFace);
+    }
+    qDebug("aire totale de l'objet:%f",aireObjet);
 }
 
 void MainWindow::boiteEnglobante(MyMesh *_mesh) {
 
-    //Initialisation avec le premier vertex
+   /* //Initialisation avec le premier vertex
     float xMin = _mesh->point(VertexHandle(0))[0], xMax = _mesh->point(VertexHandle(0))[0],
             yMin = _mesh->point(VertexHandle(0))[1], yMax = _mesh->point(VertexHandle(0))[1],
             zMin = _mesh->point(VertexHandle(0))[2], zMax = _mesh->point(VertexHandle(0))[2];
@@ -171,12 +254,36 @@ void MainWindow::boiteEnglobante(MyMesh *_mesh) {
 
     }
 
-
     qDebug("\n\nParametres de la boite englobante \n");
     qDebug() << "xMin : " << xMin << ", xMax : " << xMax << endl;
     qDebug() << "yMin : " << yMin << ", yMax : " << yMax << endl;
-    qDebug() << "zMin : " << zMin << ", zMax : " << zMax << endl;
+    qDebug() << "zMin : " << zMin << ", zMax : " << zMax << endl;*/
 
+    qDebug()<< "debut boite englobante";
+    float x,y,z;
+    float x_max,x_min;
+    float y_max,y_min;
+    float z_max,z_min;
+
+    for (MyMesh::VertexIter curVert = _mesh->vertices_begin(); curVert != _mesh->vertices_end(); curVert++)
+    {
+        VertexHandle vh = *curVert;
+         x = _mesh->point(vh)[0];
+         y = _mesh->point(vh)[1];
+         z = _mesh->point(vh)[2];
+
+         x_min=x;
+         x_max=x;
+         y_min=y, y_max=y;
+         z_min=z, z_max=z;
+
+        if(x<x_min) x_min=x; if(x>x_max) x_max=x;
+        if(y<y_min) y_min=y; if(y>y_max) y_max=y;
+        if(z<z_min) z_min=z; if(z>z_max) z_max=z;
+    }
+    qDebug()<< "Boite englobante: ";
+    qDebug()<< "point maximum" << x_max << "," << y_max <<","<<z_max ;
+    qDebug()<< "point minimum" << x_min << "," << y_min <<","<<z_min ;
 }
 
 void MainWindow::barycentre(MyMesh *_mesh) {
@@ -204,61 +311,7 @@ void MainWindow::barycentre(MyMesh *_mesh) {
 }
 
 
-float MainWindow::angleDiedre(MyMesh* _mesh, int faceID0,  int faceID1)
-{
-
-    FaceHandle face0(faceID0);
-    FaceHandle face1(faceID1);
-
-    MyMesh::Point n1 = _mesh->calc_face_normal(face0);
-    MyMesh::Point n2 = _mesh->calc_face_normal(face1);
-
-    n1.normalize();
-    n2.normalize();
-
-    int coef = 1;
-
-    if(asin(n1|n2) < 0)
-    {
-        coef = -1;
-    }
-
-    //qDebug() << "angle " << acos(n1|n2)*180/M_PI << endl;
-    return acos(n1|n2)*180/M_PI; //angle en degré
-}
-
-void MainWindow::histoAngleDiedre(MyMesh *_mesh)
-{
-    static unsigned long accAngle[36] = {0};
-
-    for(MyMesh::FaceIter f_it = _mesh->faces_begin() ; f_it != _mesh->faces_end() ; f_it++)
-    {
-        for(MyMesh::FaceFaceCWIter ffcw_it = _mesh->ff_cwbegin(*f_it) ; ffcw_it.is_valid() ; ffcw_it++)
-        {
-            float d = angleDiedre(_mesh, f_it->idx(), ffcw_it->idx());
-
-            for(int i = 0; i < (d/10); i++)
-            {
-                accAngle[i] += 1;
-            }
-        }
-    }
-
-
-    qDebug() << "Histogramme d'angles dièdres\n" ;
-    for(int angle = 0 ; angle < 36 ; angle++)
-    {
-        for(int j = 0 ; j < angle ; j++)
-        {
-            accAngle[angle] += accAngle[j];
-        }
-
-        qDebug() << "Angles inférieurs à " << (angle+1)*10 << " :" << accAngle[angle] << "degres" << endl;
-    }
-}
-
-
-
+//======================FIN  NOS MODIFS=====================
 
 // charge un objet MyMesh dans l'environnement OpenGL
 void MainWindow::displayMesh(MyMesh* _mesh, bool isTemperatureMap, float mapRange)
