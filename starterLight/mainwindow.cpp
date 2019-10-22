@@ -23,6 +23,7 @@ void MainWindow::on_pushButton_chargement_clicked()
     displayMesh(&mesh);
     boiteEnglobante(&mesh);
     barycentre(&mesh);
+    histoAngleDiedre(&mesh);
 }
 
 // exemple pour construire un mesh face par face
@@ -170,6 +171,7 @@ void MainWindow::boiteEnglobante(MyMesh *_mesh) {
 
     }
 
+
     qDebug("\n\nParametres de la boite englobante \n");
     qDebug() << "xMin : " << xMin << ", xMax : " << xMax << endl;
     qDebug() << "yMin : " << yMin << ", yMax : " << yMax << endl;
@@ -200,6 +202,63 @@ void MainWindow::barycentre(MyMesh *_mesh) {
     qDebug() << "(X, Y, Z) = " << bary_accX << ", " << bary_accY << ", " << bary_accZ << endl;
 
 }
+
+
+float MainWindow::angleDiedre(MyMesh* _mesh, int faceID0,  int faceID1)
+{
+
+    FaceHandle face0(faceID0);
+    FaceHandle face1(faceID1);
+
+    MyMesh::Point n1 = _mesh->calc_face_normal(face0);
+    MyMesh::Point n2 = _mesh->calc_face_normal(face1);
+
+    n1.normalize();
+    n2.normalize();
+
+    int coef = 1;
+
+    if(asin(n1|n2) < 0)
+    {
+        coef = -1;
+    }
+
+    //qDebug() << "angle " << acos(n1|n2)*180/M_PI << endl;
+    return acos(n1|n2)*180/M_PI; //angle en degré
+}
+
+void MainWindow::histoAngleDiedre(MyMesh *_mesh)
+{
+    static unsigned long accAngle[36] = {0};
+
+    for(MyMesh::FaceIter f_it = _mesh->faces_begin() ; f_it != _mesh->faces_end() ; f_it++)
+    {
+        for(MyMesh::FaceFaceCWIter ffcw_it = _mesh->ff_cwbegin(*f_it) ; ffcw_it.is_valid() ; ffcw_it++)
+        {
+            float d = angleDiedre(_mesh, f_it->idx(), ffcw_it->idx());
+
+            for(int i = 0; i < (d/10); i++)
+            {
+                accAngle[i] += 1;
+            }
+        }
+    }
+
+
+    qDebug() << "Histogramme d'angles dièdres\n" ;
+    for(int angle = 0 ; angle < 36 ; angle++)
+    {
+        for(int j = 0 ; j < angle ; j++)
+        {
+            accAngle[angle] += accAngle[j];
+        }
+
+        qDebug() << "Angles inférieurs à " << (angle+1)*10 << " :" << accAngle[angle] << "degres" << endl;
+    }
+}
+
+
+
 
 // charge un objet MyMesh dans l'environnement OpenGL
 void MainWindow::displayMesh(MyMesh* _mesh, bool isTemperatureMap, float mapRange)

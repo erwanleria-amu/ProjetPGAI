@@ -45,6 +45,10 @@ public:
 
     void barycentre(MyMesh * _mesh);
 
+    float angleDiedre(MyMesh* _mesh, int faceID0,  int faceID1);
+
+    void histoAngleDiedre(MyMesh* _mesh);
+
     void resetAllColorsAndThickness(MyMesh* _mesh);
 
 private slots:
