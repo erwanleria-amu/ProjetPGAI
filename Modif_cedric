@@ -1,0 +1,48 @@
+float faceArea(MyMesh* _mesh, int faceID)
+{
+    /* **** à compléter ! **** */
+    int i=0;
+    MyMesh::FaceHandle face;
+    face = _mesh->face_handle((faceID));
+    MyMesh::Point sommets [3];
+    for (MyMesh::FaceVertexIter curVert = _mesh->fv_iter(face); curVert.is_valid(); curVert ++)
+    {
+        //qDebug() << "    vertID :" << (*curVert).idx();
+        sommets[i]= _mesh->point((*curVert));
+        i++;
+    }
+
+    return((sommets[1] - sommets[0]) % (sommets[2] - sommets[0])).norm() / 2;
+
+    //return 0.0;
+}
+
+void f_aire(MyMesh* _mesh)
+{
+    float aire_min=faceArea(_mesh,0);
+    float aire_max=faceArea(_mesh,0);
+    float aire;
+    int histo[10]={0,0,0,0,0,0,0,0,0,0};
+    float t;
+
+    for (int i=1;i<_mesh->n_faces();i++)
+    {
+        aire=faceArea(_mesh,i);
+        if(aire_min>aire)
+                aire_min=aire;
+        if(aire_max<aire)
+            aire_max=aire;
+    }
+    qDebug()<< "aire min : "<<aire_min;
+    qDebug()<< "aire max : "<<aire_max;
+    if(aire_min!=aire_max)
+    {
+        for (int i=1;i<_mesh->n_faces();i++)
+        {
+            aire=faceArea(_mesh,i);
+            t=(aire-aire_min)*100/(aire_max-aire_min);
+            histo[int(t/10)]+=1;
+        }
+        for (int i = 0; i <10; i++)
+            qDebug() << "entre"<<i*10 <<"% et " << (i+1)*10<<"% : "<< histo[i];
+    }
